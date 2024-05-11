@@ -1,18 +1,40 @@
-namespace QueueService;
+using QueueService.BackgroundTaskQueue;
 
-public class Worker(ILogger<Worker> logger) : BackgroundService
+namespace App.QueueService;
+
+public sealed class QueuedHostedService(
+        IBackgroundTaskQueue taskQueue,
+        ILogger<QueuedHostedService> logger) : BackgroundService
 {
-    private readonly ILogger<Worker> _logger = logger;
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        logger.LogInformation($"{nameof(QueuedHostedService)} is running. Tap W to add a work item to the background queue.");
+        return ProcessTaskQueueAsync(stoppingToken);
+    }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    private async Task ProcessTaskQueueAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            if (_logger.IsEnabled(LogLevel.Information))
+            try
             {
-                _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
+                Func<CancellationToken, ValueTask>? workItem = await taskQueue.DequeueAsync(stoppingToken);
+                await workItem(stoppingToken);
             }
-            await Task.Delay(1000, stoppingToken);
+            catch (OperationCanceledException)
+            {
+                // Prevent throwing if stoppingToken was signaled
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error occurred executing task work item.");
+            }
         }
+    }
+
+    public override async Task StopAsync(CancellationToken stoppingToken)
+    {
+        logger.LogInformation($"{nameof(QueuedHostedService)} is stopping.");
+        await base.StopAsync(stoppingToken);
     }
 }

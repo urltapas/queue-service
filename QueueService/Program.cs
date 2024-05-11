@@ -1,7 +1,22 @@
-using QueueService;
+using App.QueueService;
+using QueueService.BackgroundTaskQueue;
 
-var builder = Host.CreateApplicationBuilder(args);
-builder.Services.AddHostedService<Worker>();
+HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
+builder.Services.AddSingleton<MonitorLoop>();
+builder.Services.AddHostedService<QueuedHostedService>();
+builder.Services.AddSingleton<IBackgroundTaskQueue>(_ => 
+{
+    if (!int.TryParse(builder.Configuration["QueueCapacity"], out var queueCapacity))
+    {
+        queueCapacity = 100;
+    }
 
-var host = builder.Build();
+    return new DefaultBackgroundTaskQueue(queueCapacity);
+});
+
+IHost host = builder.Build();
+
+MonitorLoop monitorLoop = host.Services.GetRequiredService<MonitorLoop>()!;
+monitorLoop.StartMonitorLoop();
+
 host.Run();
