@@ -46,5 +46,4 @@ Em resumo, um serviço de fila é uma técnica poderosa para gerenciar o process
 
 ### Fonte
 
-[Create a Queue Service](https://learn.microsoft.com/en-us/dotnet/core/extensions/queue-service)
 [Worker services in .NET](https://learn.microsoft.com/en-us/dotnet/core/extensions/workers)
