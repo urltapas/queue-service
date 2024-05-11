@@ -1,3 +1,5 @@
+### Worker Service
+
 Um serviço de fila (ou serviço de enfileiramento) é uma abordagem para gerenciar o processamento assíncrono e sequencial de itens de trabalho em um sistema computacional. Essa técnica é frequentemente utilizada em cenários onde há necessidade de processamento de tarefas de forma ordenada, escalável e eficiente.
 
 ### Funcionamento Básico
